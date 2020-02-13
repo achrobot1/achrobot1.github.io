@@ -3,7 +3,7 @@ title: "About"
 layout: archive
 permalink: /about/
 header:
-    image "/images/alaska_scenery.jpg"
+    image: "/images/alaska_scenery.jpg"
 ---
 
 
