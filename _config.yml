@@ -108,10 +108,10 @@ analytics:
 # Site Author
 author:
   name             : "Antoni Chrobot"
-  avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  avatar           : "/images/austria_bridge.jpg" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "Project Portfolio."
   location         : "Central New Jersey"
-  email            : # "antoni.chrobot@gmail.com"
+  email            : "antoni.chrobot@gmail.com"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
@@ -119,6 +119,9 @@ author:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/achrobot1"
+    - label: "LinkedIn"
+      icon: "fab fa-fw fa-linkedin"
+      url: "https://www.linkedin.com/in/antonichrobot/"
       # url: "https://github.com/"
 
 # Site Footer
