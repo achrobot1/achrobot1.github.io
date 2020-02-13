@@ -2,6 +2,7 @@
 title: "About"
 layout: archive
 permalink: /about/
+author_profile: true
 header:
     image: "/images/alaska_scenery.jpg"
 ---
