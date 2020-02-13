@@ -112,7 +112,6 @@ author:
   bio              : "Project Portfolio."
   location         : "Central New Jersey"
   email            : # "antoni.chrobot@gmail.com"
-  linkedin:        : "antonichrobot"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
@@ -125,24 +124,9 @@ author:
 # Site Footer
 footer:
   links:
-    - label: "Twitter"
-      icon: "fab fa-fw fa-twitter-square"
-      # url:
-    - label: "Facebook"
-      icon: "fab fa-fw fa-facebook-square"
-      # url:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
-      # url:
-    - label: "GitLab"
-      icon: "fab fa-fw fa-gitlab"
-      # url:
-    - label: "Bitbucket"
-      icon: "fab fa-fw fa-bitbucket"
-      # url:
-    - label: "Instagram"
-      icon: "fab fa-fw fa-instagram"
-      # url:
+      url: "https://github.com/achrobot1"
 
 
 # Reading Files
