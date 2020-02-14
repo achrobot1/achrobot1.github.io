@@ -18,7 +18,7 @@ header:
 
 I built a guitar tuner using an electret microphone, an ARM Cortex-M3 processor, and a 128x32 OLED display. For those unfamiliar with this style of guitar tuner, it operates as follows: the user plays a guitar string that they are trying to tune, and the OLED displays tuning instructions (tune up, tune down, or in tune).
 
-<img src="/images/guitar-tuner/instruction_example.jpg" width="800" />
+<img src="/images/guitar-tuner/instruction_example.jpg" width="500" />
 
 
 ### Parts used
