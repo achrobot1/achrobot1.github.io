@@ -27,6 +27,284 @@ I started this project by taking samples from the ADC on the STM32 and sending t
 
 The below Python notebook describes how I came up with a way to detect fundamental frequency of a recorded guitar string.
 
+In standard guitar tuning the six notes and their ideal frequencies are as follows:
+
+
+|Note|Frequency (Hz)|
+|--|-----|
+|E | 82  |
+|A | 110 |
+|D | 147 |
+|G | 196 |
+|B | 247 |
+|e | 330 |
+
+
+
+
+```python
+from helper import *
+import numpy as np
+import os
+
+WAVEFORM_DIR = 'pickled_waveforms/raw_waveforms'
+FFT_DIR = 'pickled_waveforms/frequency_domain_waveforms'
+
+SIGNAL_LENGTH = 256
+
+
+strings = ['E', 'A', 'D', 'G', 'B', 'e']
+
+%matplotlib inline
+plt.rcParams["figure.figsize"] = (20,30)
+```
+
+Import signals captured by the ADC on the STM32. Signals were captured and pickled to easily access at later times.
+
+raw_signals contains 24 signals of 256 float values captured from the microphone sampled at 1KHz by the ADC. Four samples were captured for all 6 guitar strings, hence 4*6=24 samples.
+
+fft_signals also contains 24 signals, with 4 signals for all 6 strings. These signals are frequency domain signals obtained by performing a FFT on the STM32, with DC component and 60Hz components set to 0.
+
+
+```python
+raw_signals = dict()
+fft_signals = dict()
+for each in strings:
+    raw_signals[each] = read_pickle_file(os.path.join(WAVEFORM_DIR, 'guitar%s_256_4.txt'%each))
+    fft_signals[each] = read_pickle_file(os.path.join(FFT_DIR, 'fft_%s_256_4.txt'%each))
+
+
+# freq = np.fft.fftfreq(SIGNAL_LENGTH, 0.001)
+```
+
+Let's take a look at the frequency domain signals for each guitar string. The ideal fundamental frequency of each guitar string is plotted in red.
+
+
+```python
+fig, a = plt.subplots(6,4)
+for row, st in enumerate(fft_signals.keys()):
+    for i in range(4):
+        freq = fft_signals[st][i].keys()
+        mag = fft_signals[st][i].values()
+        a[row][i].stem(freq, mag, use_line_collection=True)
+        a[row][i].stem([string_freq[st]], [max(mag)], 'r:', use_line_collection=True)
+        a[row][i].set_title(st)
+        a[row][i].grid(which='both')
+        a[row][i].minorticks_on()
+plt.show()
+```
+
+
+![png](/images/output_5_0.png)
+
+
+As can be seen, the ideal frequency does not always match the greatest frequency component of the frequency domain signals. Each guitar string seems to have a unique 'footprint'. For the lower frequency strings, we see a lot of spikes in the frequency domain signal due to harmonics. Predicting a signals fundamental frequency will prove difficult, since harmonics can be much greater in magnitude than the fundamental frequency for a given string.
+
+Take a look at the A string samples. In the second, third, and fourth samples, the fundamental frequency (110Hz) is dwarfed by it's harmonics. The third harmonic of A (330Hz) is also the fundamental frequency of the high e string. Similarly, the third harmonic of E (247Hz) is also the fundamental frequency of the B string. 
+
+At this point I realized that predicting the fundamental frequency of a guitar string recording will take two steps:
+* Predict the guitar string being played
+* Estimate the fundamental frequency by taking a weighted average of FFT coefficients around that guitar string
+
+# Predicting the guitar string from frequency domain signal
+
+To predict the guitar string being played, I had to find a way to classify frequency domain signals. I already had 4 samples of each guitar string in the frequency domain so I used this information to develop an algorithm to classify new signals. I first took 4 samples for each string, and created an average frequency domain signal.
+
+
+```python
+average_fft_signals = dict.fromkeys(fft_signals.keys())
+
+for st in fft_signals.keys():
+    average_fft_signals[st] = get_average_fft(fft_signals[st])
+```
+
+
+```python
+fig, a = plt.subplots(6,1)
+for row, st in enumerate(average_fft_signals.keys()):
+    freq = fft_signals[st][i].keys()
+    mag = average_fft_signals[st].values()
+    a[row].stem(freq, mag, use_line_collection=True)
+    a[row].stem([string_freq[st]], [max(mag)], 'r:', use_line_collection=True)
+    a[row].set_title(st+' average FFT')
+    a[row].grid(which='both')
+    a[row].minorticks_on()
+plt.show()
+```
+
+
+![png](/images/output_10_0.png)
+
+
+Once I had these average frequency domain signals for each guitar string, I could normalize them and create unit vectors. I could then perform a dot product between any frequency domain signal and my unit vectors, and the result would give me a measure of how similar the two vectors are.
+
+If I have 256 point frequency domain signal, $\vec{a}$, and a unit vector, $\vec{b}$, since $\lvert\vec{b}\rvert = 1$ their dot product is given by:
+$$ \lvert\vec{a}\rvert \lvert\vec{b}\rvert cos(\theta) = \lvert\vec{a}\rvert cos(\theta) $$
+where $\theta$ is the angle between the two vectors. Increasing $\theta$ decreases the result of the dot product. Therefore the greatest possible value that can result from this dot product is the case where $\lvert\vec{a}\rvert$ points in the same same direction as $\lvert\vec{b}\rvert$.
+
+The code below calculates the 6 unit vectors for each guitar string. To decrease dot product computations, I decided that my unit vectors did not need to take into account all of the frequencies in the frequency domain. Given the symmetry of the signals, I could instantly remove half the signal and still keep all of the information. So I only care about positive frequencies. I also did not care about all frequency bins. My interest is only in frequencies around the ideal guitar string frequencies. For example, my guitar tuner would not expect to hear a 50Hz sound. It would expect to hear sounds that are fairly close to the guitar string frequencies. For this reason my unit vectors represented the FFT coefficients for frequency bins at the following frequencies:
+
+
+```python
+print(frequencies_of_interest)
+```
+
+    [74.2188, 78.125, 82.0312, 85.9375, 89.8437, 101.5625, 105.4687, 109.375, 113.2812, 117.1875, 140.625, 144.5312, 148.4375, 152.3438, 156.25, 160.1562, 164.0625, 167.9687, 171.875, 187.5, 191.4062, 195.3125, 199.2187, 203.125, 210.9375, 214.8437, 218.75, 222.6562, 226.5625, 238.2812, 242.1875, 246.0937, 250.0, 253.9062, 285.1562, 289.0625, 292.9688, 296.875, 300.7812, 320.3125, 324.2187, 328.125, 332.0312, 335.9375, 382.8125, 386.7187, 390.625, 394.5312, 398.4375, 402.3437, 406.25, 410.1562, 414.0625, 417.9687, 433.5937, 437.5, 441.4062, 445.3125, 449.2187]
+
+
+
+```python
+unit_vecs = dict.fromkeys(strings)
+for k in unit_vecs.keys():
+    unit_vecs[k] = get_eigen_fft(fft_signals[k], frequencies_of_interest)
+```
+
+
+```python
+fig, a = plt.subplots(6,1)
+for i,k in enumerate(unit_vecs.keys()):
+    a[i].stem(frequencies_of_interest, unit_vecs[k], use_line_collection=True)
+    a[i].grid(which='both')
+    a[i].minorticks_on()
+    a[i].set_title(k+' unit vector')
+plt.show()
+```
+
+
+![png](/images/output_15_0.png)
+
+
+It is interesting to see the profile of each guitar string. We can see that the E string has a prominent second harmonic, and the A string has prominent second and third harmonics. I am curious how much variability there would be if I created unit vectors for different guitars or even different guitar string materials (steel vs nylon).
+
+Let us verify how accurately these unit vectors can predict the guitar string being played. First let's create a matrix to hold our unit vectors as rows.
+
+
+```python
+proj_matrix = np.matrix(list(unit_vecs.values()))
+proj_matrix.shape
+```
+
+
+
+
+    (6, 59)
+
+
+
+
+```python
+print('Actual \t Predicted')
+for st in strings:
+    for i in range(4):
+        signal = np.array([fft_signals[st][i][f] for f in frequencies_of_interest])
+        # project signal onto unit vector matrix. Find string corresponding to largest value
+        prediction = strings[ (proj_matrix @ signal).A.argmax() ] 
+        print(st,'\t', prediction)
+```
+
+    Actual 	 Predicted
+    E 	 E
+    E 	 E
+    E 	 E
+    E 	 E
+    A 	 A
+    A 	 A
+    A 	 A
+    A 	 A
+    D 	 D
+    D 	 D
+    D 	 D
+    D 	 D
+    G 	 G
+    G 	 G
+    G 	 G
+    G 	 G
+    B 	 B
+    B 	 B
+    B 	 B
+    B 	 B
+    e 	 e
+    e 	 e
+    e 	 e
+    e 	 e
+
+
+The unit vector approach yields perfect results when tested against the sampled signals. Since this prediction will be running on the STM32, I decided to minimize the number of floating point operations by taking all of the unit vectors and removing any 'noise'. I removed all components with a value less than 0.1 . Next I multiplied each value by 100 and rounded to the nearest integer. Although the vectors are no longer unit vectors, they should have similar magnitudes, and we can still make reasonable classifications as we have before.
+
+
+```python
+for k in unit_vecs.keys():
+    for i, val in enumerate(unit_vecs[k]):
+        if val < 0.1: unit_vecs[k][i] = 0
+        else: unit_vecs[k][i] = int(unit_vecs[k][i]*100)
+        
+for k in unit_vecs.keys():
+    print(np.linalg.norm(unit_vecs[k]))
+```
+
+    94.71536306217698
+    95.62949335848225
+    96.33275663033837
+    96.96906723280368
+    93.82430388763883
+    96.50388593212193
+
+
+
+```python
+fig, a = plt.subplots(6,1)
+for i,k in enumerate(unit_vecs.keys()):
+    a[i].stem(frequencies_of_interest, unit_vecs[k], use_line_collection=True)
+    a[i].grid(which='both')
+    a[i].minorticks_on()
+    a[i].set_title(k+' unit vector')
+plt.show()
+```
+
+
+![png](/images/output_22_0.png)
+
+
+# Estimating frequency
+
+After making a prediction about which string is being played, I could then look at the frequency domain signal around the frequency of interest to make an estimate of the fundamental frequency. I did this by taking a weighted average of FFT coefficients around the frequency of interest. The plot below shows a spectrograph of an e string, and in red are the frequency bins used to calculate the weighted average. The e string has an ideal frequency of 330 Hz, and the weighted average predicts the signal to have a fundamental frequency of 329.57 Hz.
+
+
+```python
+freq = list(fft_signals['e'][0].keys())
+mag = list(fft_signals['e'][0].values())
+plt.stem(freq[:128], mag[:128], use_line_collection=True)
+
+i = freq.index(328.125)
+plt.stem(freq[i-1:i+3], mag[i-1:i+3], 'r', use_line_collection=True)
+
+plt.title('e FFT')
+plt.grid()
+
+plt.gcf().set_size_inches(20,6)
+plt.show()
+```
+
+
+![png](output_25_0.png)
+
+
+
+```python
+print('%.2f Hz'%weighted_average(freq[i-1:i+3], mag[i-1:i+3] ))
+```
+
+    329.57 Hz
+
+
+# Conclusion
+
+The analysis shown in this notebook is the algorithm I used to take a 256 point frequency domain signal of a recorded guitar string and predict the fundamental frequency. This is the algorithm that is running on the STM32, with the unit vectors obtained by this analysis.
+
+Not displayed are the other approaches I took that did not work well. I first tried a naive approach where I predicted the fundamental frequency to be the greatest component in the frequency domain signal. This failed due to harmonics. The other approach was to use autocorrelation. This also failed since it was difficult to distinguish between the A and e string, as well as the E and B string. This is because their frequencies are multiples of each other ( A -> 110 Hz, e->330 Hz ) and I had no way of distinguishing between these strings effectively.
+
+
+
 # Implementation
 Once I had the unit vectors and the algorithm working in Python, I then had to implement that on the STM32.
 
