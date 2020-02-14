@@ -2,16 +2,20 @@
 title: "STM32 Guitar Tuner"
 date: 2020-02-13
 tags: [embedded, audio, STM32]
+header:
+    image: "/images/guitar-tuner/splash.jpg"
 ---
 
 * Table of contents test
 {:toc}
 
-# Guitar Tuner
+# Introduction
 
 [Github](https://github.com/achrobot1/guitar-tuner-STM32)
 
 I built a guitar tuner using an electret microphone, an ARM Cortex-M3 processor, and a 128x32 OLED display. For those unfamiliar with this style of guitar tuner, it operates as follows: the user plays a guitar string that they are trying to tune, and the OLED displays tuning instructions (tune up, tune down, or in tune).
+
+![instruction](/images/guitar-tuner/instruction_example.jpg)
 
 I have been wanting to do this project for a long time now and was glad to finally get around to it.
 
@@ -20,10 +24,10 @@ I have been wanting to do this project for a long time now and was glad to final
 * SSD1306 OLED Display (128 x 32)
 * SparkFun Sound Detector
 
-
-
+![Parts](/images/guitar-tuner/hardware.jpg)
 
 # Approach/Analysis
+[Top](#introduction)
 Going into this project I had minimal experience programming the STM32F103 board and working with discrete signals. I was not sure how I would detect fundamental frequency from a time domain recording of a guitar string.
 
 I started this project by taking samples from the ADC on the STM32 and sending them over UART to my laptop so I could analyze the signals using Python. Since the highest frequency guitar string is the e string at 330Hz, I had to sample at a frequency of at least 660Hz. I gave myself some cushion and chose to use a 1KHz sampling rate. This also made the timer interrupt setup simple.
@@ -109,7 +113,7 @@ At this point I realized that predicting the fundamental frequency of a guitar s
 * Predict the guitar string being played
 * Estimate the fundamental frequency by taking a weighted average of FFT coefficients around that guitar string
 
-# Predicting the guitar string from frequency domain signal
+## Predicting the guitar string from frequency domain signal
 
 To predict the guitar string being played, I had to find a way to classify frequency domain signals. I already had 4 samples of each guitar string in the frequency domain so I used this information to develop an algorithm to classify new signals. I first took 4 samples for each string, and created an average frequency domain signal.
 
@@ -268,7 +272,8 @@ plt.show()
 ![png](/images/output_22_0.png)
 
 
-# Estimating frequency
+## Estimating frequency
+[Top](#introduction)
 
 After making a prediction about which string is being played, I could then look at the frequency domain signal around the frequency of interest to make an estimate of the fundamental frequency. I did this by taking a weighted average of FFT coefficients around the frequency of interest. The plot below shows a spectrograph of an e string, and in red are the frequency bins used to calculate the weighted average. The e string has an ideal frequency of 330 Hz, and the weighted average predicts the signal to have a fundamental frequency of 329.57 Hz.
 
@@ -300,7 +305,8 @@ print('%.2f Hz'%weighted_average(freq[i-1:i+3], mag[i-1:i+3] ))
     329.57 Hz
 
 
-# Conclusion
+## Conclusion
+[Top](#introduction)
 
 The analysis shown in this notebook is the algorithm I used to take a 256 point frequency domain signal of a recorded guitar string and predict the fundamental frequency. This is the algorithm that is running on the STM32, with the unit vectors obtained by this analysis.
 
@@ -309,8 +315,11 @@ Not displayed are the other approaches I took that did not work well. I first tr
 
 
 # Implementation
+[Top](#introduction)
 Once I had the unit vectors and the algorithm working in Python, I then had to implement that on the STM32.
 
+## Block Diagram
+[Top](#introduction)
 ![Block Diagram](/images/block_diagram.png)
 
 In summary the STM32 uses several peripherals. A timer is used to generate interrupts at 1KHz. The interrupt service routine reads converted data from the ADC peripheral and fills a buffer that can hold 256 float values. SPI is used to drive the OLED display.
