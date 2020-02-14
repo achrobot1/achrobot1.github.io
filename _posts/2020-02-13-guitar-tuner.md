@@ -295,7 +295,7 @@ plt.show()
 ```
 
 
-![png](images/output_25_0.png)
+![png](/images/output_25_0.png)
 
 
 
