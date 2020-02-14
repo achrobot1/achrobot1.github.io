@@ -6,18 +6,18 @@ header:
     image: "/images/guitar-tuner/splash.jpg"
 ---
 
+[Github](https://github.com/achrobot1/guitar-tuner-STM32)
+
 * Table of contents test
 {:toc}
 
 # Introduction
 
-[Github](https://github.com/achrobot1/guitar-tuner-STM32)
 
 I built a guitar tuner using an electret microphone, an ARM Cortex-M3 processor, and a 128x32 OLED display. For those unfamiliar with this style of guitar tuner, it operates as follows: the user plays a guitar string that they are trying to tune, and the OLED displays tuning instructions (tune up, tune down, or in tune).
 
 ![instruction](/images/guitar-tuner/instruction_example.jpg)
 
-I have been wanting to do this project for a long time now and was glad to finally get around to it.
 
 ### Parts used
 * NUCLEO-STM32F103RB Development board
@@ -28,6 +28,7 @@ I have been wanting to do this project for a long time now and was glad to final
 
 # Approach/Analysis
 [Top](#introduction)
+
 Going into this project I had minimal experience programming the STM32F103 board and working with discrete signals. I was not sure how I would detect fundamental frequency from a time domain recording of a guitar string.
 
 I started this project by taking samples from the ADC on the STM32 and sending them over UART to my laptop so I could analyze the signals using Python. Since the highest frequency guitar string is the e string at 330Hz, I had to sample at a frequency of at least 660Hz. I gave myself some cushion and chose to use a 1KHz sampling rate. This also made the timer interrupt setup simple.
@@ -316,10 +317,12 @@ Not displayed are the other approaches I took that did not work well. I first tr
 
 # Implementation
 [Top](#introduction)
+
 Once I had the unit vectors and the algorithm working in Python, I then had to implement that on the STM32.
 
 ## Block Diagram
 [Top](#introduction)
+
 ![Block Diagram](/images/block_diagram.png)
 
 In summary the STM32 uses several peripherals. A timer is used to generate interrupts at 1KHz. The interrupt service routine reads converted data from the ADC peripheral and fills a buffer that can hold 256 float values. SPI is used to drive the OLED display.
