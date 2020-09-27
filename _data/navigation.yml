@@ -6,6 +6,8 @@ main:
     url: /about/
   - title: "Projects"
     url: /projects/
+  - title: "CTF"
+    url: /CTF-writeups/
   # - title: "Sample Posts"
   #   url: /year-archive/
   # - title: "Sitemap"

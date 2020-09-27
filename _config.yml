@@ -16,11 +16,11 @@ minimal_mistakes_skin    : "air" # "air", "aqua", "contrast", "dark", "dirt", "n
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Antoni Chrobot Project Portfolio"
+title                    : "Antoni Chrobot"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
 name                     : "Antoni Chrobot"
-description              : "A site where I share my projects."
+description              : "A site where I share my projects and CTF writeups."
 url                      : # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
