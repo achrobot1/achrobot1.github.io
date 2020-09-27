@@ -1,6 +1,7 @@
 ---
-title: "BSides Boston: EZ Bake Oven"
+title: "BSides Boston 2020: EZ Bake Oven"
 tags: [CTF, web, cookies]
+date: 2020-09-27
 ---
 
 

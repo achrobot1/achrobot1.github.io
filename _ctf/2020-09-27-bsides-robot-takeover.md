@@ -1,11 +1,13 @@
 ---
-title: "BSides Boston: Robot Takeover"
+title: "BSides Boston 2020: Robot Takeover"
 tags: [CTF, scripting, python, requests]
+date: 2020-09-28
 ---
 
 
 # Challenge
 Prompt:
+
 ![png](/images/bsides-writeups/robot-takeover-prompt.png)
 
 We are given a static webpage with some text saying:
