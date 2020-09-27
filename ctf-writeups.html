@@ -1,0 +1,14 @@
+---
+layout: categories
+permalink: /CTF-writeups/
+title: "CTF writeups"
+author_profile: true
+header:
+    image: "/images/alaska_seward.jpg"
+---
+
+{% for post in site.categories.ctf %}
+<li><span>{{ post.data | date_to_string }}</span> &nbsp;
+<a href="{{ post.url }}">{{ post.title }}</a></li>
+{% endfor %}
+
