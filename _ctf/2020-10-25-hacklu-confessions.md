@@ -1,7 +1,7 @@
 ---
 title: "Hack.lu CTF 2020: Confessions"
 tags: [CTF, web, python, scripting]
-date: 2020-10-24
+date: 2020-10-25
 ---
 
 
