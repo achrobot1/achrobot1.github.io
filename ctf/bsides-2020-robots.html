@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<title>Antoni Chrobot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atelier-forest-dark.min.css" integrity="sha512-bHrTOKTYdBppORvOCgGWhwUt68kqsl5e9cemM/7hf1uehwPUjtAiGyXzcoBFRN3SnktP0582tbAzkPPMWVTgVQ==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<link rel="stylesheet" href="../style.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+</style>
+
+<body>
+
+<!-- Page Container -->
+<div class="container-fluid px-5">
+
+<!-- navbar  -->
+<nav class="navbar navbar-expand-lg topnav mt-1 mb-3 p-0">
+    	
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon">
+    <i class="fa fa-navicon" style="color: white"></i>
+    </span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    	
+    <ul class="navbar-nav">
+	<li class="nav-item">
+	    <a class="navlink" href="../index.html">Home</a>
+	</li>
+	<li class="nav-item">
+	    <a class="navlink" href="../projects.html">Projects</a>
+	</li>
+	<li class="nav-item">
+	    <a class="active navlink" href="../ctf.html">CTF</a>
+	</li>
+    </ul>
+
+    </div>
+</nav>
+<!-- end navbar  -->
+	
+
+<div class="row justify-content-center"> 
+
+    <div class="col-12 col-xl-9">
+
+    <div class="w3-display-container w3-container gray-bg w3-card  w3-margin-bottom">
+
+	<!-- CONTENT GOES HERE -->
+
+
+	<h2 class="title mb-2">BSides Boston 2020: Robot Takeover</h2>
+	<!--  <div class="meta mb-3"><span class="date">September 28, 2020</span></div>-->
+	<p>September 28, 2020</p>
+		<hr>
+
+	<div class="blog-post-body">
+
+<h2>Challenge</h2>
+
+<p>Prompt:</p>
+
+<a href="../images/bsides-writeups/robot-takeover-prompt.png">
+    <img src="../images/bsides-writeups/robot-takeover-prompt.png" class="blog-img" alt="png" style="width:40%; height:auto " />
+</a>
+
+<p>We are given a static webpage with some text saying:</p>
+
+<p><b>BEEP BOOP. BOW DOWN TO OUR ROBOT OVERLORDS.</b></p>
+
+<p>&hellip; and not much else. An obvious first step is to look at /robots.txt</p>
+
+<p>This gives us:</p>
+<a href="../images/bsides-writeups/robots-txt-sample1.png"/>
+<img src="../images/bsides-writeups/robots-txt-sample1.png" class="blog-img" alt="png" />
+</a>
+
+<p>So seemingly it wants us to access the given .txt files with the provided user-agent headers.</p>
+
+<p>Using python requests to do this, we get several HTTP responses with text:
+<code>
+REJOICE, ROBOT. THE CHARACTER OF THE FLAG AT INDEX 24 IS THE SAME CHARACTER AT INDEX 6 IN THIS FILENAME.
+</code></p>
+
+<p>Ok cool, we can get the flag by looking at the provided indices in the filename.
+Only problem was that only 4 of the endpoints returned a message like this, meaning we only had 4 characters of the flag.</p>
+
+<p>After checking robots.txt again, I got this page:</p>
+<a href="../images/bsides-writeups/robots-txt-sample2.png"/>
+<img src="../images/bsides-writeups/robots-txt-sample2.png" class="blog-img" alt="png" />
+</a>
+
+<p>robots.txt gives us different content each time we refresh!
+This gives us a path to the flag:
+* request robots.txt
+* send GET requests to each endpoint with the given User-Agent header
+* build out the flag with the collected chars
+* repeat until we have the full flag</p>
+
+<h2>Script</h2>
+
+<p>I continued using Python requests to solve this challenge.
+In summary, my script makes continuous requests to /robots.txt, carves out the User-agent information and the corresponding endpoints, makes requests to those endpoints with the User-agent header set appropriately, checks if we get a response telling us a character in the flag, carves out the index of the character in the filename, carves out index of character in the flag, and finally, holds all found flag characters in a list.</p>
+
+<pre><code>import requests
+import time
+
+flag = ['*' for i in range(35)]
+print(''.join(flag))</p>
+
+while '*' in flag:
+    robots_url = 'http://challenge.ctf.games:31879/robots.txt'
+    session = requests.Session()
+
+    r = session.get(robots_url)
+    chunks = r.text.split('\n\n')
+
+    for ch in chunks:
+	user_agent = ch.split('\n')[0].split('User-agent: ')[1]
+
+	endpoints = []
+	lines = ch.split('\n')[1:-1]
+	for l in lines:
+	    endpoints.append(l.split('Disallow: ')[1])
+
+	headers = {'User-agent': user_agent}
+	for ep in endpoints:
+	    url = f'http://challenge.ctf.games:31879{ep}'
+	    try:
+		r = session.get(url, headers=headers)
+	    except ConnectionError:
+		pass
+	    if 'REJOICE' in r.text:
+		flag_index = int(r.text.split('AT INDEX ')[1].split(' ')[0])
+		filename_index = int(r.text.split('AT INDEX ')[2].split(' ')[0])
+
+		ep = ep[1:]
+		print(ep)
+		print('\t' + r.text)
+		print(f'flag index: {flag_index}')
+		print(f'file index: {filename_index}')
+		flag[flag_index] = ep[filename_index]
+		print(''.join(flag))
+
+	time.sleep(0.1)
+    </code></pre>
+
+    <p>
+    Finally, I get to sit back and watch as the flag is formed:</p>
+
+    <a href="../images/bsides-writeups/script_output.png" />
+    <img src="../images/bsides-writeups/script_output.png" class="blog-img" alt="png" />
+    </a>
+
+    <a href="../images/bsides-writeups/script_output_completed.png" />
+    <img src="../images/bsides-writeups/script_output_completed.png" class="blog-img" alt="png" />
+    </a>
+
+    </div><!--//container-->
+
+
+    <!-- END CONTENT -->
+
+
+    </div> <!-- End display container -->
+    </div> <!-- End columns -->
+</div> <!-- End row -->
+
+<footer class="fixed-bottom w3-deep-purple w3-center pt-2">
+    <a class="mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+  <p>Find me on social media.</p>
+  
+  
+  <p><a href="#" >Top</a></p>
+</footer>
+
+</body>
+</html>
+
+
