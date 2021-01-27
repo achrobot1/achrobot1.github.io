@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<title>Antoni Chrobot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atelier-forest-dark.min.css" integrity="sha512-bHrTOKTYdBppORvOCgGWhwUt68kqsl5e9cemM/7hf1uehwPUjtAiGyXzcoBFRN3SnktP0582tbAzkPPMWVTgVQ==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<link rel="stylesheet" href="../style.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+</style>
+
+<body>
+
+<!-- Page Container -->
+<div class="container-fluid px-5">
+
+<!-- navbar  -->
+<nav class="navbar navbar-expand-lg topnav mt-1 mb-3 p-0">
+    	
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon">
+    <i class="fa fa-navicon" style="color: white"></i>
+    </span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    	
+    <ul class="navbar-nav">
+	<li class="nav-item">
+	    <a class="navlink" href="../index.html">Home</a>
+	</li>
+	<li class="nav-item">
+	    <a class="navlink" href="../projects.html">Projects</a>
+	</li>
+	<li class="nav-item">
+	    <a class="active navlink" href="../ctf.html">CTF</a>
+	</li>
+    </ul>
+
+    </div>
+</nav>
+<!-- end navbar  -->
+	
+
+<div class="row justify-content-center"> 
+
+    <div class="col-12 col-xl-9">
+
+    <div class="w3-display-container w3-container gray-bg w3-card  w3-margin-bottom">
+
+	<!-- CONTENT GOES HERE -->
+
+	<h2 class="title mb-2">TryHackMe: Year of the Rabbit</h2>
+	<div class="meta mb-3">
+	<span class="date">January 25, 2021</span>
+	</div>
+	<hr>
+
+	<a href="https://tryhackme.com/room/yearoftherabbit">https://tryhackme.com/room/yearoftherabbit</a>
+
+	<h2>Enumeration</h2>
+
+	<p><em>Note: I added the IP address to my /etc/hosts file, so that 'yotr' resolves to the target IP</em></p>
+
+	<h3>Port scanning</h3>
+
+	<p><code>
+	nmap -sV -sC -v -p -oN all-ports.txt yotr
+	</code>
+	</p>
+	<a href="../images/thm-rabbit/nmap-output.png" />
+	<img class="blog-img" src="../images/thm-rabbit/nmap-output.png" alt="png" title="" />
+	</a>
+
+	<p>We have FTP, SSH, and a web service at port 80 </p>
+
+	<p>Visiting the web service revealed a default Apache page:
+	</p>
+	<a href="../images/thm-rabbit/apache-default-page.png" />
+	<img class="blog-img" src="../images/thm-rabbit/apache-default-page.png" alt="png" title="" />
+	</a>
+
+	<h3>Directory brute forcing</h3>
+
+	<p>I ran dirsearch on this default page:
+	<a href="../images/thm-rabbit/dir-enumeration.png" />
+	<img class="blog-img" src="../images/thm-rabbit/dir-enumeration.png" alt="png" title="" />
+	</a>
+	The only endpoint I found that wasn't a 403 was <code>/assets/</code>:</p>
+
+	<p>
+	</p>
+	<a href="../images/thm-rabbit/assets.png" />
+	<img class="blog-img" src="../images/thm-rabbit/assets.png" alt="png" title="" />
+	</a>
+
+	<p>RickRolled.mp4 is exactly what one might expect (this room was full of rabbit holes).</p>
+
+	<p>So with that, let's take a look at the only other file, <code>style.css</code>
+	</p>
+	<a href="../images/thm-rabbit/style-css.png" />
+	<img class="blog-img" src="../images/thm-rabbit/style-css.png" alt="png" title="" />
+	</a>
+
+	<h3>Finding hidden endpoints</h3>
+
+	<p>Let's have a look at this endpoint mentioned in <code>style.css</code>!
+	</p>
+	<a href="../images/thm-rabbit/super_secret_endpoint.png" />
+	<img class="blog-img" src="../images/thm-rabbit/super_secret_endpoint.png" alt="png" title="" />
+	</a>
+
+	<p>After clicking <em>OK</em> we are redirected to the youtube video for Rick Astley's infamous song.</p>
+
+	<p>But looking closely at my browsers URL bar, I noticed that it contained <code>yotr/sup3r_s3cret_fl4g/</code> and not <code>yotr/sup3r_s3cret_fl4g.php</code></p>
+
+	<p>This caught my attention. Perhaps there was some redirect going on? I decided to take a closer look at the HTTP requests made, by using Burp to check them out.
+	</p>
+	<a href="../images/thm-rabbit/hidden-directory-burp.png" />
+	<img class="blog-img" src="../images/thm-rabbit/hidden-directory-burp.png" alt="png" title="" />
+	</a>
+
+	<p>My suspicions were correct. After making a request to <code>/sup3r_s3cret_fl4g</code> , we get an HTTP response with header:
+	<code>
+	Location: intermediary.php?hidden_directory=/&lt;HIDDEN_DIRECTORY&gt;
+	</code></p>
+
+	<p>Our browser makes a request to this endpoint, and the response from that request has another Location header that redirects us to <code>/sup3r_s3cret_fl4g/</code></p>
+
+	<p>The hidden directory GET parameter is definitely something to check out. Visiting this endpoint gives us a file listing:
+	</p>
+	<a href="../images/thm-rabbit/hidden-directory-contents.png" />
+	<img class="blog-img" src="../images/thm-rabbit/hidden-directory-contents.png" alt="png" title="" />
+	</a>
+
+	<p>And clicking on <code>Hot_Babe.png</code>:
+	</p>
+	<a href="../images/thm-rabbit/hot-babe.png" />
+	<img class="blog-img" src="../images/thm-rabbit/hot-babe.png" alt="png" title="" />
+	</a>
+
+	<h3>Using strings on a PNG</h3>
+
+	<p>For those that don't know, this is a well known image called Lena. It is used for testing out image processing techniques.
+	This to me was a hint to take a close look at the image and look for anything that could be hidden in it.</p>
+
+	<p>I downloaded this image and ran <code>strings</code> against it:
+	</p>
+	<a href="../images/thm-rabbit/strings-output.png" />
+	<img class="blog-img" src="../images/thm-rabbit/strings-output.png" alt="png" title="" />
+	</a>
+
+	<p>The image contained a wordlist for possible FTP passwords!</p>
+
+	<h3>FTP bruteforcing</h3>
+
+	<p>I used hydra to brute force ftp logins:
+	</p>
+	<a href="../images/thm-rabbit/ftp-brute-force.png" />
+	<img class="blog-img" src="../images/thm-rabbit/ftp-brute-force.png" alt="png" title="" />
+	</a>
+
+	<p>This was successful in finding valid FTP credentials. With that, lets check out FTP!
+	</p>
+	<a href="../images/thm-rabbit/ftp-contents.png" />
+	<img class="blog-img" src="../images/thm-rabbit/ftp-contents.png" alt="png" title="" />
+	</a>
+
+	<p>There was one file hosted on the FTP server, <code>Eli's_Creds.txt</code></p>
+
+	<p>Looking at this file:
+	</p>
+	<a href="../images/thm-rabbit/creds-bf.png" />
+	<img class="blog-img" src="../images/thm-rabbit/creds-bf.png" alt="png" title="" />
+	</a>
+
+	<p>Looks like some kind of esoteric language. Some googling revealed that this was in the brainfuck esoteric language.</p>
+
+	<p>Decoding this output gave us credentials for user <code>eli</code>.</p>
+
+	<p>I tried these credentials to log in through SSH and was successful:
+	</p>
+	<a href="../images/thm-rabbit/ssh-logged-in.png" />
+	<img class="blog-img" src="../images/thm-rabbit/ssh-logged-in.png" alt="png" title="" />
+	</a>
+
+	<p>We get a message from root to gwendoline, making mention of some 's3cr3t' hiding place.</p>
+
+	<h3>Horizontal privesc</h3>
+
+	<p>Let's look for any files or directories with 's3cr3t' in their name:
+	</p>
+	<a href="../images/thm-rabbit/finding-s3cr3t-dir.png" />
+	<img class="blog-img" src="../images/thm-rabbit/finding-s3cr3t-dir.png" alt="png" title="" />
+	</a>
+
+	<p>We found a hidden file with a message for gwendoline. 
+	</p>
+	<a href="../images/thm-rabbit/gwen-creds.png" /> 
+	<img class="blog-img" src="../images/thm-rabbit/gwen-creds.png" alt="png" title="" /> 
+	</a>
+
+	<p>Great, now we have credentials for user gwendoline. Lets switch to her and continue enumerating.</p>
+
+	<h3>Root privesc</h3>
+
+	<p>Running <code>sudo -l</code> reveals:
+	</p>
+	<a href="../images/thm-rabbit/sudo-l-output.png" /> 
+	<img class="blog-img" src="../images/thm-rabbit/sudo-l-output.png" alt="png" title="" /> 
+	</a>
+
+	<p>This means gwendoline can run the command <code>/usr/bin/vi /home/gwendoline/user.txt</code> as any user <em>except</em> for root.</p>
+
+	<p>But there must be some way to privesc from this. A quick search on sudo vulnerabilities turned up <code>CVE-2019-14287</code> which gives
+	us a bypass for this situation. We can specify a user id when running <code>sudo &lt;COMMAND&gt;</code>, and an id of -1 will get interpreted as a 0.
+	Since root has UID 0, we can simply run:</p>
+
+	<a href="../images/thm-rabbit/vi-as-root.png" /> 
+	<img class="blog-img" src="../images/thm-rabbit/vi-as-root.png" alt="png" title="" /> 
+	</a>
+
+	<a href="../images/thm-rabbit/grep-from-root-vi.png" /> 
+	<img class="blog-img" src="../images/thm-rabbit/grep-from-root-vi.png" alt="png" title="" /> 
+	</a>
+	<a href="../images/thm-rabbit/proof-of-root.png" /> 
+	<img class="blog-img" src="../images/thm-rabbit/proof-of-root.png" alt="png" title="" /> 
+	</a>
+
+	<p>And we have code execution as root! We can run <code>:!sh</code> to get a root shell, and <code>cat</code> out the flag</p>
+	<!-- END CONTENT -->
+
+
+    </div> <!-- End display container -->
+    </div> <!-- End columns -->
+</div> <!-- End row -->
+
+<!-- footer for small devices -->
+<footer class="fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+</footer>
+
+
+<!-- Footer for large devices -->
+<footer class="d-none d-xl-block fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+  <p class="m-0">Find me on social media.</p> 
+  
+</footer>
+
+</body>
+</html>
+
+

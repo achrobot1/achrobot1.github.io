@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<title>Antoni Chrobot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atelier-forest-dark.min.css" integrity="sha512-bHrTOKTYdBppORvOCgGWhwUt68kqsl5e9cemM/7hf1uehwPUjtAiGyXzcoBFRN3SnktP0582tbAzkPPMWVTgVQ==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<link rel="stylesheet" href="../style.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+</style>
+
+<body>
+
+<!-- Page Container -->
+<div class="container-fluid px-5">
+
+<!-- navbar  -->
+<nav class="navbar navbar-expand-lg topnav mt-1 mb-3 p-0">
+    	
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon">
+    <i class="fa fa-navicon" style="color: white"></i>
+    </span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    	
+    <ul class="navbar-nav">
+	<li class="nav-item">
+	    <a class="navlink" href="../index.html">Home</a>
+	</li>
+	<li class="nav-item">
+	    <a class="navlink" href="../projects.html">Projects</a>
+	</li>
+	<li class="nav-item">
+	    <a class="active navlink" href="../ctf.html">CTF</a>
+	</li>
+    </ul>
+
+    </div>
+</nav>
+<!-- end navbar  -->
+	
+
+<div class="row justify-content-center"> 
+
+    <div class="col-12 col-xl-9">
+
+    <div class="w3-display-container w3-container gray-bg w3-card  w3-margin-bottom">
+
+	<!-- CONTENT GOES HERE -->
+
+	<h2 class="title mb-2">TryHackMe: Year of the Dog</h2>
+	<div class="meta mb-3">
+	<span class="date">January 26, 2020</span>
+	</div>
+	<hr>
+
+
+	<p><a href="https://tryhackme.com/room/yearofthedog">https://tryhackme.com/room/yearofthedog</a></p>
+
+	<h2>Enumeration</h2>
+
+	<p><em>Note: I added the IP address to my /etc/hosts file, so that 'yotd' resolves to the target IP</em></p>
+
+	<h3>Port scanning</h3>
+
+	<p><code>
+	nmap -sV -sC -v -p -oN all-ports.txt yotd
+	</code> 
+	</p>
+	<a href="../images/thm-dog/nmap-output.png" />
+	<img class="blog-img" src="../images/thm-dog/nmap-output.png" alt="png" title="" />
+	</a>
+
+	<p>We have a web application and SSH to explore. Let's start by looking at the web app.</p>
+
+	<h3>Web page</h3>
+
+	<p>
+	<a href="../images/thm-dog/main-web-page.png" />
+	<img class="blog-img" src="../images/thm-dog/main-web-page.png" alt="png" title="" />
+	</a>
+	Not too much going on here. A static html page showing a queue number. 
+	Brute forcing directories did not yield anything useful.</p>
+
+	<p>There is one cookie set by this page, <code>id</code>.
+	Deleting this cookie, and revisiting the page, shows a different queue number. This cookie must be some identifier
+	for the queue number for the person visiting this page. <br />
+	</p>
+	<a href="../images/thm-dog/regular-cookie.png" />
+	<img class="blog-img" src="../images/thm-dog/regular-cookie.png" alt="png" title="" />
+	</a>
+
+	<p>Providing a non-sense value for the cookie gives us this as a response:
+	</p>
+	<a href="../images/thm-dog/nonsense-cookie.png" />
+	<img class="blog-img" src="../images/thm-dog/nonsense-cookie.png" alt="png" title="" />
+	</a>
+
+	<h3>SQL Injection</h3>
+
+	<p>Setting an invalid cookie value gives us an <code>Error</code> on the page! Perhaps the cookie is vulnerable to SQL injection.  </p>
+
+	<p>After some playing around, I found a payload that would reflect on the webpage:
+	<a href="../images/thm-dog/reflected-cookie.png" />
+	<img class="blog-img" src="../images/thm-dog/reflected-cookie.png" alt="png" title="" />
+	</a>
+	The SQL query asks for two columns, and displays the value returned for the second column.</p>
+
+	<p>At this point I wrote a little python script that sends a request with a cookie we control.
+	I found this to be more convenient than setting the cookie in my browser each time.</p>
+
+	<p>We can try to abuse this SQL injection to read system files:
+	<a href="../images/thm-dog/sqli-lfi.png" />
+	<img class="blog-img" src="../images/thm-dog/sqli-lfi.png" alt="png" title="" />
+	</a>
+	We got <code>/etc/passwd</code>! For now we can see that there is one non-root user with a bash shell on this machine.</p>
+
+	<p>We were successful in <em>reading</em> server side files, now let's try to <em>write</em> to server side files.
+	Hopefully we can upload a php file somewhere under the web root (<code>/var/www/html</code>)</p>
+
+	<p>I also noticed that whenever I sent a request with a cookie that had a &lt; or &gt; character, I would get a response
+	that just had the text 'RCE attempt detected'. So there must be a blacklist for cookie characters.</p>
+
+	<p>I wanted to write php code to a file, but the php code would require &lt; and &gt; in it's content.
+	I got around this by base64 encoding my php code, and the using SQL's FROM_BASE64() function to take a base64 encoded string.
+	This got me around the blacklist.</p>
+
+	<p>The below script uploads a php file that takes a GET parameter, and runs it as a system command, giving us remote code execution.
+	</p>
+	<a href="../images/thm-dog/sqli-fileupload.png" />
+	<img class="blog-img" src="../images/thm-dog/sqli-fileupload.png" alt="png" title="" />
+	</a>
+
+	<p>We can then visit <code>http://yotd/shell.php</code> in our browser, and set the <code>c</code> GET parameter to any command we want to execute on the target machine.
+	</p>
+	<a href="../images/thm-dog/rce.png" />
+	<img class="blog-img" src="../images/thm-dog/rce.png" alt="png" title="" />
+	</a>
+
+	<h3>Getting a web shell</h3>
+
+	<p>With RCE, the first order of business is to upload a webshell. On my host machine, I spun up a python http server, and then using
+	RCE, I called <code>wget</code> to retrieve a php reverse shell from my host machine.
+	</p>
+	<a href="../images/thm-dog/upload-webshell.png" />
+	<img class="blog-img" src="../images/thm-dog/upload-webshell.png" alt="png" title="" />
+	</a>
+
+	<p>I then used netcat to listen for TCP connections, and by visiting <code>http://yotd/revshell.php</code> in my browser, I was able to run the revshell php code.
+	</p>
+	<a href="../images/thm-dog/catching-web-shell.png" />
+	<img class="blog-img" src="../images/thm-dog/catching-web-shell.png" alt="png" title="" />
+	</a>
+
+	<p>I started enumerating the system, and I came across a readable file in <code>/home/dylan</code>
+	</p>
+	<a href="../images/thm-dog/dylan-files.png" />
+	<img class="blog-img" src="../images/thm-dog/dylan-files.png" alt="png" title="" />
+	</a>
+
+	<h3>Finding leaked credentials</h3>
+
+	<p>Searching through the file <code>work_analysis</code>, I observed that this was some sort of log for sshd authentication attempts.
+	Users frequently make the mistake of entering their password along with their username (perhaps they forgot to hit the tab key).</p>
+
+	<p>Searching for 'dylan' in this file revealed that dylan had made this mistake and his password appeared in plaintext.
+	</p>
+	<a href="../images/thm-dog/leaked-creds.png" />
+	<img class="blog-img" src="../images/thm-dog/leaked-creds.png" alt="png" title="" />
+	</a>
+	<a href="../images/thm-dog/ssh-loggedin.png" />
+	<img class="blog-img" src="../images/thm-dog/ssh-loggedin.png" alt="png" title="" />
+	</a>
+
+	<h3>Further Enumeration</h3>
+
+	<p>When enumerating this machine, there were a couple things that stood out:
+	<ul>
+		
+	<li>This machine was running a docker container with some service running on port 3000</li>
+	<li>There was a <code>/gitea</code> directory, and dylan was the owner of almost all of the files</li>
+	</ul>
+
+	<p>
+	</p>
+	<a href="../images/thm-dog/docker-running.png" />
+	<img class="blog-img" src="../images/thm-dog/docker-running.png" alt="png" title="" />
+	</a>
+
+	<p>I was unfamiliar with gitea prior to this box, but in summary, it is a git service that one could host on their machine.
+	The docker container was running gitea on port 3000.</p>
+
+	<p>Port 3000 was not accessible from a remote connection. It was only accessible from the <strong>year-of-the-dog</strong> host.
+	I forwarded port 3000 using ssh:</p>
+	<pre><code>ssh -L 3000:localhost:3000 dylan@yotd</code></pre>
+
+	<p>I could then visit <code>http://localhost:3000</code> in my browser and I got the gitea web application.</p>
+
+	<p>There was one user on this gitea instance, dylan. I registered my own account and created a repository.</p>
+
+	<p>My repository git files were located at <code>/gitea/git/repositories/test/asdf.git</code> (my username was test, and the repo was named asdf)</p>
+
+	<p>Althought gitea was running in a docker container, there must have been a shared volume for <code>/gitea</code>!
+	Dylan had ownership for most of these files likely because dylan shared a UID with the user on the docker container who owned these files.</p>
+
+	<p>This means we have some control over the gitea instance running in the docker container. Maybe we can break into the docker container...</p>
+
+	<p>Searching through the files under <code>/gitea/git/repositories/test/asdf.git</code>, there was a hooks directory that contained bash scripts that
+	would run based on certain events. For example, there was a script named <code>pre-receive</code> which would run whenever a <code>push</code> was made to the repository.</p>
+
+	<p>I modified the <code>pre-receive</code> script to contain a line that would run <code>/bin/sh</code> on port 5555 of <strong>year-of-the-dog</strong>.
+	</p>
+	<a href="../images/thm-dog/modified-hook.png" />
+	<img class="blog-img" src="../images/thm-dog/modified-hook.png" alt="png" title="" />
+	</a>
+
+	<p>I opened up a netcat listener to catch the tcp connection, and pushed a change to my repository:
+	<a href="../images/thm-dog/docker-shell.png" />
+	<img class="blog-img" src="../images/thm-dog/docker-shell.png" alt="png" title="" />
+	</a>
+	I caught the shell and now I'm in the docker container!</p>
+
+	<p>The <code>git</code> user could run any command as root, so I switched to root. As root I can set permissions
+	for any file. This is really powerful when we consider the fact that this docker container has a shared volume with <strong>year-of-the-dog</strong> !</p>
+
+	<p>I exited the shell, and on <strong>year-of-the-dog</strong> I copied over <code>/bin/bash</code> to <code>/gitea/gitea</code>.
+	Then I made another push to the repository, so I could trigger the hook script, so I could catch the shell from the docker container.</p>
+
+	<p>As root on the docker container, I set the ownership of <code>bash</code> to be owned by root, and I also set the SUID bit so that this executable could be run
+	with root privileges.
+	</p>
+	<a href="../images/thm-dog/setting-permissions.png" />
+	<img class="blog-img" src="../images/thm-dog/setting-permissions.png" alt="png" title="" />
+	</a>
+
+	<p>With the bash SUID created, I exited the docker shell, and as user dylan I ran <code>./bash -p</code> giving me a root shell.
+	</p>
+	<a href="../images/thm-dog/bash-suid.png" />
+	<img class="blog-img" src="../images/thm-dog/bash-suid.png" alt="png" title="" />
+	</a>
+
+	<!-- END CONTENT -->
+
+
+    </div> <!-- End display container -->
+    </div> <!-- End columns -->
+</div> <!-- End row -->
+
+<!-- footer for small devices -->
+<footer class="fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+</footer>
+
+
+<!-- Footer for large devices -->
+<footer class="d-none d-xl-block fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+  <p class="m-0">Find me on social media.</p> 
+  
+</footer>
+
+</body>
+</html>
+
